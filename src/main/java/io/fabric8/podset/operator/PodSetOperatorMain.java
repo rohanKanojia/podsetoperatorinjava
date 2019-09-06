@@ -29,17 +29,18 @@ public class PodSetOperatorMain {
                     .withScope("Namespaced")
                     .endSpec()
                     .build();
-            PodSetController podSetController = new PodSetController();
 
             SharedInformerFactory informerFactory = client.informers();
 
             MixedOperation<PodSet, PodSetList, DoneablePodSet, Resource<PodSet, DoneablePodSet>> podSetClient = client.customResources(podSetCustomResourceDefinition, PodSet.class, PodSetList.class, DoneablePodSet.class);
             SharedIndexInformer<Pod> podSharedIndexInformer = informerFactory.sharedIndexInformerFor(Pod.class, PodList.class, 10 * 60 * 1000);
             SharedIndexInformer<PodSet> podSetSharedIndexInformer = informerFactory.sharedIndexInformerFor(PodSet.class, PodSetList.class, 10 * 60 * 1000);
+            PodSetController podSetController = new PodSetController(client, podSetClient, podSharedIndexInformer, podSetSharedIndexInformer);
 
-            podSetController.create(client, podSetClient, podSharedIndexInformer, podSetSharedIndexInformer);
-
+            podSetController.create();
             informerFactory.startAllRegisteredInformers();
+
+            podSetController.run();
         }
     }
 }
