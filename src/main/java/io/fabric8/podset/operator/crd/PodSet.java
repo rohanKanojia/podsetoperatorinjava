@@ -1,5 +1,6 @@
 package io.fabric8.podset.operator.crd;
 
+import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.client.CustomResource;
 
 public class PodSet extends CustomResource {
@@ -19,6 +20,21 @@ public class PodSet extends CustomResource {
         this.status = status;
     }
 
+    @Override
+    public String toString() {
+        return "PodSet{"+
+                "apiVersion='" + getApiVersion() + "'" +
+                ", metadata=" + getMetadata() +
+                ", spec=" + spec +
+                ", status=" + status +
+                "}";
+    }
+
     private PodSetSpec spec;
     private PodSetStatus status;
+
+    @Override
+    public ObjectMeta getMetadata() {
+        return super.getMetadata();
+    }
 }

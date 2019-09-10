@@ -5,7 +5,6 @@ import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
-import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.informers.ResourceEventHandler;
 import io.fabric8.kubernetes.client.informers.SharedIndexInformer;
@@ -14,13 +13,10 @@ import io.fabric8.kubernetes.client.informers.cache.Lister;
 import io.fabric8.podset.operator.crd.DoneablePodSet;
 import io.fabric8.podset.operator.crd.PodSet;
 import io.fabric8.podset.operator.crd.PodSetList;
-import io.fabric8.podset.operator.util.DeepCopy;
-import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -63,7 +59,9 @@ public class PodSetController {
 
         podInformer.addEventHandler(new ResourceEventHandler<Pod>() {
             @Override
-            public void onAdd(Pod pod) { handlePodObject(pod); }
+            public void onAdd(Pod pod) {
+                handlePodObject(pod);
+            }
 
             @Override
             public void onUpdate(Pod oldPod, Pod newPod) {
@@ -80,13 +78,16 @@ public class PodSetController {
 
     public void run() {
         logger.log(Level.INFO, "Starting PodSet controller");
-        while (!podInformer.hasSynced() || !podSetInformer.hasSynced()) {
-            logger.log(Level.INFO, "Waiting for cache sync");
-        }
+        while (!podInformer.hasSynced() || !podSetInformer.hasSynced());
 
         while (true) {
             try {
+                logger.log(Level.INFO, "trying to fetch item from workqueue...");
+                if (workqueue.isEmpty()) {
+                    logger.log(Level.INFO, "Work Queue is empty");
+                }
                 String key = workqueue.take();
+                logger.log(Level.INFO, "Got " + key);
                 if (key == null || key.isEmpty() || (!key.contains("/"))) {
                     logger.log(Level.WARNING, "invalid resource key: " + key);
                 }
@@ -114,6 +115,7 @@ public class PodSetController {
     private void reconcile(PodSet podSet) {
         List<String> pods = podCountByLabel(APP_LABEL, podSet.getMetadata().getName());
         if (pods == null || pods.size() == 0) {
+            createPods(podSet.getSpec().getReplicas(), podSet);
             return;
         }
         int existingPods = pods.size();
@@ -121,23 +123,22 @@ public class PodSetController {
         // Compare it with desired state i.e spec.replicas
         // if less then spin up pods
         if (existingPods < podSet.getSpec().getReplicas()) {
-            Pod pod = createNewPod(podSet);
-            kubernetesClient.pods().inNamespace(podSet.getMetadata().getNamespace()).create(pod);
+            createPods(podSet.getSpec().getReplicas() - existingPods, podSet);
         }
 
         // If more pods then delete the pods
         int diff = existingPods - podSet.getSpec().getReplicas();
-        if (diff > 0) {
-            String podName = pods.get(0);
+        for (; diff > 0; diff--) {
+            String podName = pods.remove(0);
             kubernetesClient.pods().inNamespace(podSet.getMetadata().getNamespace()).withName(podName).delete();
         }
+    }
 
-        // Update the status (status.availableReplicas)
-        PodSet podSetCopy = DeepCopy.copy(podSet);
-        podSet.getStatus().setAvailableReplicas(existingPods);
-        podSetClient.inNamespace(podSet.getMetadata().getNamespace())
-                .withName(podSet.getMetadata().getNamespace())
-                .createOrReplace(podSet);
+    private void createPods(int numberOfPods, PodSet podSet) {
+        for (int index = 0; index < numberOfPods; index++) {
+            Pod pod = createNewPod(podSet);
+            kubernetesClient.pods().inNamespace(podSet.getMetadata().getNamespace()).create(pod);
+        }
     }
 
     private List<String> podCountByLabel(String label, String podSetName) {
@@ -157,13 +158,17 @@ public class PodSetController {
     }
 
     private void enqueuePodSet(PodSet podSet) {
+        logger.log(Level.INFO, "enqueuePodSet(" + podSet.getMetadata().getName() + ")");
         String key = Cache.metaNamespaceKeyFunc(podSet);
+        logger.log(Level.INFO, "Going to enqueue key " + key);
         if (key != null || !key.isEmpty()) {
+            logger.log(Level.INFO, "Adding item to workqueue");
             workqueue.add(key);
         }
     }
 
     private void handlePodObject(Pod pod) {
+        logger.log(Level.INFO, "handlePodObject(" + pod.getMetadata().getName() + ")");
         OwnerReference ownerReference = getControllerOf(pod);
         if (!ownerReference.getKind().equalsIgnoreCase("PodSet")) {
             return;
@@ -180,7 +185,7 @@ public class PodSetController {
                   .withGenerateName(podSet.getMetadata().getName() + "-pod")
                   .withNamespace(podSet.getMetadata().getNamespace())
                   .withLabels(Collections.singletonMap(APP_LABEL, podSet.getMetadata().getName()))
-                  .addNewOwnerReference().withController(true).withKind("PodSet").withNewUid(podSet.getMetadata().getUid()).endOwnerReference()
+                  .addNewOwnerReference().withController(true).withKind("PodSet").withApiVersion("demo.k8s.io/v1alpha1").withName(podSet.getMetadata().getName()).withNewUid(podSet.getMetadata().getUid()).endOwnerReference()
                 .endMetadata()
                 .withNewSpec()
                   .addNewContainer().withName("busybox").withImage("busybox").withCommand("sleep", "3600").endContainer()

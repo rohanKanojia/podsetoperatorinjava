@@ -1,0 +1,6 @@
+apiVersion: demo.k8s.io/v1alpha1
+kind: PodSet
+metadata:
+  name: dummy-podset
+spec:
+  replicas: 2
