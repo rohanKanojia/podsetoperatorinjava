@@ -27,5 +27,7 @@ of pods are running in cluster or not.
 Make Sure that PodSet Custom Resource Definition is already applied onto the cluster. If not, just apply it using this command:
 ```
 kubectl apply -f src/main/resources/crd.yaml
-
 ```
+
+Once everything is set, you can see that operator creating pods in your cluster for PodSet resource:
+![Demo Screenshot](https://i.imgur.com/ECNKBjG.png)
