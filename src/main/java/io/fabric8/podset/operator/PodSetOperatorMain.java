@@ -16,15 +16,26 @@ import io.fabric8.podset.operator.crd.DoneablePodSet;
 import io.fabric8.podset.operator.crd.PodSet;
 import io.fabric8.podset.operator.crd.PodSetList;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 /**
  * Main Class for Operator, you can run this sample using this command:
  *
  * mvn exec:java -Dexec.mainClass=io.fabric8.podset.operator.PodSetOperatorMain
  */
 public class PodSetOperatorMain {
+    public static Logger logger = Logger.getLogger(PodSetOperatorMain.class.getName());
+
     public static void main(String args[]) {
         try (KubernetesClient client = new DefaultKubernetesClient()) {
+            String namespace = client.getNamespace();
+            if (namespace == null) {
+                logger.log(Level.INFO, "No namespace found via config, assuming default.");
+                namespace = "default";
+            }
 
+            logger.log(Level.INFO, "Using namespace : " + namespace);
             CustomResourceDefinition podSetCustomResourceDefinition = new CustomResourceDefinitionBuilder()
                     .withNewMetadata().withName("podsets.demo.k8s.io").endMetadata()
                     .withNewSpec()
@@ -46,7 +57,7 @@ public class PodSetOperatorMain {
             MixedOperation<PodSet, PodSetList, DoneablePodSet, Resource<PodSet, DoneablePodSet>> podSetClient = client.customResources(podSetCustomResourceDefinition, PodSet.class, PodSetList.class, DoneablePodSet.class);
             SharedIndexInformer<Pod> podSharedIndexInformer = informerFactory.sharedIndexInformerFor(Pod.class, PodList.class, 10 * 60 * 1000);
             SharedIndexInformer<PodSet> podSetSharedIndexInformer = informerFactory.sharedIndexInformerForCustomResource(podSetCustomResourceDefinitionContext, PodSet.class, PodSetList.class, 10 * 60 * 1000);
-            PodSetController podSetController = new PodSetController(client, podSetClient, podSharedIndexInformer, podSetSharedIndexInformer);
+            PodSetController podSetController = new PodSetController(client, podSetClient, podSharedIndexInformer, podSetSharedIndexInformer, namespace);
 
             podSetController.create();
             informerFactory.startAllRegisteredInformers();

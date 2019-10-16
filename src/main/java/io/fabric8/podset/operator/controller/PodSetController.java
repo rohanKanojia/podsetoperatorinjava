@@ -31,12 +31,12 @@ public class PodSetController {
     public static Logger logger = Logger.getLogger(PodSetController.class.getName());
     public static String APP_LABEL = "app";
 
-    public PodSetController(KubernetesClient kubernetesClient, MixedOperation<PodSet, PodSetList, DoneablePodSet, Resource<PodSet, DoneablePodSet>>  podSetClient, SharedIndexInformer<Pod> podInformer, SharedIndexInformer<PodSet> podSetInformer) {
+    public PodSetController(KubernetesClient kubernetesClient, MixedOperation<PodSet, PodSetList, DoneablePodSet, Resource<PodSet, DoneablePodSet>>  podSetClient, SharedIndexInformer<Pod> podInformer, SharedIndexInformer<PodSet> podSetInformer, String namespace) {
         this.kubernetesClient = kubernetesClient;
         this.podSetClient = podSetClient;
-        this.podSetLister = new Lister<>(podSetInformer.getIndexer(), "default");
+        this.podSetLister = new Lister<>(podSetInformer.getIndexer(), namespace);
         this.podSetInformer = podSetInformer;
-        this.podLister = new Lister<>(podInformer.getIndexer(), "default");
+        this.podLister = new Lister<>(podInformer.getIndexer(), namespace);
         this.podInformer = podInformer;
         this.workqueue = new ArrayBlockingQueue<>(1024);
     }
