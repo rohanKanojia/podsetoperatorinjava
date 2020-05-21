@@ -6,10 +6,12 @@ import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinitionBuilder;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import io.fabric8.kubernetes.client.informers.SharedIndexInformer;
+import io.fabric8.kubernetes.client.informers.SharedInformerEventListener;
 import io.fabric8.kubernetes.client.informers.SharedInformerFactory;
 import io.fabric8.podset.operator.controller.PodSetController;
 import io.fabric8.podset.operator.crd.DoneablePodSet;
@@ -61,8 +63,11 @@ public class PodSetOperatorMain {
 
             podSetController.create();
             informerFactory.startAllRegisteredInformers();
+            informerFactory.addSharedInformerEventListener(exception -> logger.log(Level.SEVERE, "Exception occurred, but caught", exception));
 
             podSetController.run();
+        } catch (KubernetesClientException exception) {
+            logger.log(Level.SEVERE, "Kubernetes Client Exception : {}", exception.getMessage());
         }
     }
 }
