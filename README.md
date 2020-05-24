@@ -40,6 +40,9 @@ Once everything is set, you can see that operator creating pods in your cluster 
 - Make sure that you have given correct privileges to `ServiceAccount` that would be used by the `Pod`, it's `default` in our case. Otherwise you might get 403 from Kubernetes API server.
 ```
 kubectl create clusterrolebinding default-pod --clusterrole cluster-admin --serviceaccount=default:default
+
+# In case of some other namespace:
+kubectl create clusterrolebinding default-pod --clusterrole cluster-admin --serviceaccount=<namespace>:default
 ```
 - Build Docker Image
 ```
@@ -55,5 +58,9 @@ mvn k8s:resource
 - Apply generated Kubernetes Manifests onto Kubernetes
 ```
 mvn k8s:apply
+```
+Once generated resources are applied, try creating one of `PodSet` objects in `src/main/resources`
+```
+kubectl apply -f src/main/resources/cr.yaml
 ```
 ![JKube Apply Generated Kubernetes Manifests](https://i.imgur.com/dgp8lX5.png)

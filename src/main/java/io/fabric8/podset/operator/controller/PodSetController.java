@@ -112,7 +112,7 @@ public class PodSetController {
      *
      * @param podSet specified podset
      */
-    private void reconcile(PodSet podSet) {
+    protected void reconcile(PodSet podSet) {
         List<String> pods = podCountByLabel(APP_LABEL, podSet.getMetadata().getName());
         if (pods == null || pods.size() == 0) {
             createPods(podSet.getSpec().getReplicas(), podSet);
