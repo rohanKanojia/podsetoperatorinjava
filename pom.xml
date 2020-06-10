@@ -80,7 +80,7 @@
             <plugin>
                 <groupId>org.eclipse.jkube</groupId>
                 <artifactId>kubernetes-maven-plugin</artifactId>
-                <version>1.0.0-alpha-3</version>
+                <version>1.0.0-alpha-4</version>
                 <configuration>
                     <images>
                         <image>
