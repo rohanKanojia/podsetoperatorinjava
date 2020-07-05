@@ -28,8 +28,8 @@ public class PodSetController {
     private Lister<Pod> podLister;
     private KubernetesClient kubernetesClient;
     private MixedOperation<PodSet, PodSetList, DoneablePodSet, Resource<PodSet, DoneablePodSet>>  podSetClient;
-    public static Logger logger = Logger.getLogger(PodSetController.class.getName());
-    public static String APP_LABEL = "app";
+    public static final Logger logger = Logger.getLogger(PodSetController.class.getName());
+    public static final String APP_LABEL = "app";
 
     public PodSetController(KubernetesClient kubernetesClient, MixedOperation<PodSet, PodSetList, DoneablePodSet, Resource<PodSet, DoneablePodSet>>  podSetClient, SharedIndexInformer<Pod> podInformer, SharedIndexInformer<PodSet> podSetInformer, String namespace) {
         this.kubernetesClient = kubernetesClient;
@@ -54,7 +54,9 @@ public class PodSetController {
             }
 
             @Override
-            public void onDelete(PodSet podSet, boolean b) { }
+            public void onDelete(PodSet podSet, boolean b) {
+                // Do nothing
+            }
         });
 
         podInformer.addEventHandler(new ResourceEventHandler<Pod>() {
@@ -65,20 +67,24 @@ public class PodSetController {
 
             @Override
             public void onUpdate(Pod oldPod, Pod newPod) {
-                if (oldPod.getMetadata().getResourceVersion() == newPod.getMetadata().getResourceVersion()) {
+                if (oldPod.getMetadata().getResourceVersion().equals(newPod.getMetadata().getResourceVersion())) {
                     return;
                 }
                 handlePodObject(newPod);
             }
 
             @Override
-            public void onDelete(Pod pod, boolean b) { }
+            public void onDelete(Pod pod, boolean b) {
+                // Do nothing
+            }
         });
     }
 
     public void run() {
         logger.log(Level.INFO, "Starting PodSet controller");
-        while (!podInformer.hasSynced() || !podSetInformer.hasSynced());
+        while (!podInformer.hasSynced() || !podSetInformer.hasSynced()) {
+            // Wait till Informer syncs
+        }
 
         while (true) {
             try {
@@ -87,21 +93,23 @@ public class PodSetController {
                     logger.log(Level.INFO, "Work Queue is empty");
                 }
                 String key = workqueue.take();
-                logger.log(Level.INFO, "Got " + key);
-                if (key == null || key.isEmpty() || (!key.contains("/"))) {
-                    logger.log(Level.WARNING, "invalid resource key: " + key);
+                Objects.requireNonNull(key, "key can't be null");
+                logger.log(Level.INFO, String.format("Got %s", key));
+                if (key.isEmpty() || (!key.contains("/"))) {
+                    logger.log(Level.WARNING, String.format("invalid resource key: %s", key));
                 }
 
                 // Get the PodSet resource's name from key which is in format namespace/name
                 String name = key.split("/")[1];
                 PodSet podSet = podSetLister.get(key.split("/")[1]);
                 if (podSet == null) {
-                    logger.log(Level.SEVERE, "PodSet " + name + " in workqueue no longer exists");
+                    logger.log(Level.SEVERE, String.format("PodSet %s in workqueue no longer exists", name));
                     return;
                 }
                 reconcile(podSet);
 
             } catch (InterruptedException interruptedException) {
+                Thread.currentThread().interrupt();
                 logger.log(Level.SEVERE, "controller interrupted..");
             }
         }
@@ -114,7 +122,7 @@ public class PodSetController {
      */
     protected void reconcile(PodSet podSet) {
         List<String> pods = podCountByLabel(APP_LABEL, podSet.getMetadata().getName());
-        if (pods == null || pods.size() == 0) {
+        if (pods.isEmpty()) {
             createPods(podSet.getSpec().getReplicas(), podSet);
             return;
         }
@@ -153,15 +161,15 @@ public class PodSetController {
             }
         }
 
-        logger.log(Level.INFO, "count: " + podNames.size());
+        logger.log(Level.INFO, String.format("count: %d", podNames.size()));
         return podNames;
     }
 
     private void enqueuePodSet(PodSet podSet) {
         logger.log(Level.INFO, "enqueuePodSet(" + podSet.getMetadata().getName() + ")");
         String key = Cache.metaNamespaceKeyFunc(podSet);
-        logger.log(Level.INFO, "Going to enqueue key " + key);
-        if (key != null || !key.isEmpty()) {
+        logger.log(Level.INFO, String.format("Going to enqueue key %s", key));
+        if (key != null && !key.isEmpty()) {
             logger.log(Level.INFO, "Adding item to workqueue");
             workqueue.add(key);
         }
@@ -170,6 +178,7 @@ public class PodSetController {
     private void handlePodObject(Pod pod) {
         logger.log(Level.INFO, "handlePodObject(" + pod.getMetadata().getName() + ")");
         OwnerReference ownerReference = getControllerOf(pod);
+        Objects.requireNonNull(ownerReference);
         if (!ownerReference.getKind().equalsIgnoreCase("PodSet")) {
             return;
         }
