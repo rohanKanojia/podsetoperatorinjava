@@ -1,5 +1,7 @@
 # PodSet Operator in Java Using Fabric8 Kubernetes Client
 
+![Build](https://github.com/rohanKanojia/podsetoperatorinjava/workflows/Java%20CI%20with%20Maven/badge.svg?branch=master)
+
 This is a demo operator which implements a simple operator for a custom resource called PodSet which is somewhat equal to ReplicaSet. Here 
 is what this resource looks like:
 ```
