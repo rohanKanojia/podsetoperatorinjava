@@ -1,6 +1,11 @@
 # PodSet Operator in Java Using Fabric8 Kubernetes Client
 
 ![Build](https://github.com/rohanKanojia/podsetoperatorinjava/workflows/Java%20CI%20with%20Maven/badge.svg?branch=master)
+![License](https://img.shields.io/github/license/rohanKanojia/podsetoperatorinjava)
+[![Twitter](https://img.shields.io/twitter/follow/fabric8io?style=social)](https://twitter.com/fabric8io)
+
+## Note
+> This project is a demo project for blog for writing a simple Kubernetes operation in Java using [Fabric8 Kubernetes Client](https://github.com/fabric8io/kubernetes-client). You can find full blog here: [Writing a simple Kubernetes Operation in Java](https://developers.redhat.com/blog/2019/10/07/write-a-simple-kubernetes-operator-in-java-using-the-fabric8-kubernetes-client/)
 
 This is a demo operator which implements a simple operator for a custom resource called PodSet which is somewhat equal to ReplicaSet. Here 
 is what this resource looks like:
