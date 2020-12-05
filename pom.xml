@@ -15,7 +15,8 @@
         <maven-assembly-plugin.version>3.3.0</maven-assembly-plugin.version>
         <junit-jupiter-engine.version>5.6.2</junit-jupiter-engine.version>
         <maven-surefire-plugin.version>3.0.0-M4</maven-surefire-plugin.version>
-        <jkube.version>1.0.1</jkube.version>
+        <exec-maven-plugin.version>3.0.0</exec-maven-plugin.version>
+        <jkube.version>1.0.2</jkube.version>
     </properties>
 
     <dependencies>
@@ -82,33 +83,11 @@
                 <groupId>org.eclipse.jkube</groupId>
                 <artifactId>kubernetes-maven-plugin</artifactId>
                 <version>${jkube.version}</version>
-                <configuration>
-                    <images>
-                        <image>
-                            <!-- Add your dockerhub user name here -->
-                            <name>rohankanojia/podset-operator-java:${project.version}</name>
-                            <alias>podset-operator</alias>
-                            <build>
-                                <from>openjdk:latest</from>
-                                <assembly>
-                                    <mode>dir</mode>
-                                    <inline>
-                                        <id>copy-jar-with-deps</id>
-                                        <files>
-                                            <file>
-                                                <source>
-                                                    ${project.build.directory}/${project.name}-${project.version}-jar-with-dependencies.jar
-                                                </source>
-                                                <outputDirectory>complete-jar</outputDirectory>
-                                            </file>
-                                        </files>
-                                    </inline>
-                                </assembly>
-                                <cmd>java -jar maven/complete-jar/${project.name}-${project.version}-jar-with-dependencies.jar</cmd>
-                            </build>
-                        </image>
-                    </images>
-                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>${exec-maven-plugin.version}</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
