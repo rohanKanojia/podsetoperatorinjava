@@ -4,8 +4,6 @@ import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodBuilder;
 import io.fabric8.kubernetes.api.model.PodList;
-import io.fabric8.kubernetes.api.model.apiextensions.v1beta1.CustomResourceDefinition;
-import io.fabric8.kubernetes.api.model.apiextensions.v1beta1.CustomResourceDefinitionBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
@@ -29,30 +27,21 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @EnableRuleMigrationSupport
-public class PodSetControllerTest {
+class PodSetControllerTest {
     @Rule
     public KubernetesServer server = new KubernetesServer();
 
-    private static final CustomResourceDefinition podSetCustomResourceDefinition = new CustomResourceDefinitionBuilder()
-            .withNewMetadata().withName("podsets.demo.k8s.io").endMetadata()
-            .withNewSpec()
-            .withGroup("demo.k8s.io")
-            .withVersion("v1alpha1")
-            .withNewNames().withKind("PodSet").withPlural("podsets").endNames()
-            .withScope("Namespaced")
-            .endSpec()
-            .build();
     private static final CustomResourceDefinitionContext podSetCustomResourceDefinitionContext = new CustomResourceDefinitionContext.Builder()
             .withVersion("v1alpha1")
             .withScope("Namespaced")
-            .withGroup("demo.k8s.io")
+            .withGroup("demo.fabric8.io")
             .withPlural("podsets")
             .build();
     private static final long RESYNC_PERIOD_MILLIS = 10 * 60 * 1000L;
 
     @Test
     @DisplayName("Should create pods for with respect to a specified PodSet")
-    public void testReconcile() throws InterruptedException {
+    void testReconcile() throws InterruptedException {
         // Given
         String testNamespace = "ns1";
         PodSet testPodSet = getPodSet("example-podset", testNamespace, "0800cff3-9d80-11ea-8973-0e13a02d8ebd");
@@ -62,7 +51,7 @@ public class PodSetControllerTest {
         KubernetesClient client = server.getClient();
 
         SharedInformerFactory informerFactory = client.informers();
-        MixedOperation<PodSet, PodSetList, DoneablePodSet, Resource<PodSet, DoneablePodSet>> podSetClient = client.customResources(podSetCustomResourceDefinition, PodSet.class, PodSetList.class, DoneablePodSet.class);
+        MixedOperation<PodSet, PodSetList, DoneablePodSet, Resource<PodSet, DoneablePodSet>> podSetClient = client.customResources(podSetCustomResourceDefinitionContext, PodSet.class, PodSetList.class, DoneablePodSet.class);
         SharedIndexInformer<Pod> podSharedIndexInformer = informerFactory.sharedIndexInformerFor(Pod.class, PodList.class, RESYNC_PERIOD_MILLIS);
         SharedIndexInformer<PodSet> podSetSharedIndexInformer = informerFactory.sharedIndexInformerForCustomResource(podSetCustomResourceDefinitionContext, PodSet.class, PodSetList.class, RESYNC_PERIOD_MILLIS);
         PodSetController podSetController = new PodSetController(client, podSetClient, podSharedIndexInformer, podSetSharedIndexInformer, testNamespace);

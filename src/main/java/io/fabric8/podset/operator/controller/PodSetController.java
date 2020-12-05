@@ -14,20 +14,24 @@ import io.fabric8.podset.operator.crd.DoneablePodSet;
 import io.fabric8.podset.operator.crd.PodSet;
 import io.fabric8.podset.operator.crd.PodSetList;
 
-import java.util.*;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class PodSetController {
-    private BlockingQueue<String> workqueue;
-    private SharedIndexInformer<PodSet> podSetInformer;
-    private SharedIndexInformer<Pod> podInformer;
-    private Lister<PodSet> podSetLister;
-    private Lister<Pod> podLister;
-    private KubernetesClient kubernetesClient;
-    private MixedOperation<PodSet, PodSetList, DoneablePodSet, Resource<PodSet, DoneablePodSet>>  podSetClient;
+    private final BlockingQueue<String> workqueue;
+    private final SharedIndexInformer<PodSet> podSetInformer;
+    private final SharedIndexInformer<Pod> podInformer;
+    private final Lister<PodSet> podSetLister;
+    private final Lister<Pod> podLister;
+    private final KubernetesClient kubernetesClient;
+    private final MixedOperation<PodSet, PodSetList, DoneablePodSet, Resource<PodSet, DoneablePodSet>> podSetClient;
     public static final Logger logger = Logger.getLogger(PodSetController.class.getName());
     public static final String APP_LABEL = "app";
 
