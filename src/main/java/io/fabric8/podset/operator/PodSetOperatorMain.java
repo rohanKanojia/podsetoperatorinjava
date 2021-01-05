@@ -11,7 +11,6 @@ import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import io.fabric8.kubernetes.client.informers.SharedIndexInformer;
 import io.fabric8.kubernetes.client.informers.SharedInformerFactory;
 import io.fabric8.podset.operator.controller.PodSetController;
-import io.fabric8.podset.operator.crd.DoneablePodSet;
 import io.fabric8.podset.operator.crd.PodSet;
 import io.fabric8.podset.operator.crd.PodSetList;
 
@@ -44,7 +43,7 @@ public class PodSetOperatorMain {
 
             SharedInformerFactory informerFactory = client.informers();
 
-            MixedOperation<PodSet, PodSetList, DoneablePodSet, Resource<PodSet, DoneablePodSet>> podSetClient = client.customResources(podSetCustomResourceDefinitionContext, PodSet.class, PodSetList.class, DoneablePodSet.class);
+            MixedOperation<PodSet, PodSetList, Resource<PodSet>> podSetClient = client.customResources(PodSet.class, PodSetList.class);
             SharedIndexInformer<Pod> podSharedIndexInformer = informerFactory.sharedIndexInformerFor(Pod.class, PodList.class, 10 * 60 * 1000);
             SharedIndexInformer<PodSet> podSetSharedIndexInformer = informerFactory.sharedIndexInformerForCustomResource(podSetCustomResourceDefinitionContext, PodSet.class, PodSetList.class, 10 * 60 * 1000);
             PodSetController podSetController = new PodSetController(client, podSetClient, podSharedIndexInformer, podSetSharedIndexInformer, namespace);
