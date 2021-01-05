@@ -11,7 +11,6 @@ import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import io.fabric8.kubernetes.client.informers.SharedIndexInformer;
 import io.fabric8.kubernetes.client.informers.SharedInformerFactory;
 import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
-import io.fabric8.podset.operator.crd.DoneablePodSet;
 import io.fabric8.podset.operator.crd.PodSet;
 import io.fabric8.podset.operator.crd.PodSetList;
 import io.fabric8.podset.operator.crd.PodSetSpec;
@@ -51,7 +50,7 @@ class PodSetControllerTest {
         KubernetesClient client = server.getClient();
 
         SharedInformerFactory informerFactory = client.informers();
-        MixedOperation<PodSet, PodSetList, DoneablePodSet, Resource<PodSet, DoneablePodSet>> podSetClient = client.customResources(podSetCustomResourceDefinitionContext, PodSet.class, PodSetList.class, DoneablePodSet.class);
+        MixedOperation<PodSet, PodSetList, Resource<PodSet>> podSetClient = client.customResources(PodSet.class, PodSetList.class);
         SharedIndexInformer<Pod> podSharedIndexInformer = informerFactory.sharedIndexInformerFor(Pod.class, PodList.class, RESYNC_PERIOD_MILLIS);
         SharedIndexInformer<PodSet> podSetSharedIndexInformer = informerFactory.sharedIndexInformerForCustomResource(podSetCustomResourceDefinitionContext, PodSet.class, PodSetList.class, RESYNC_PERIOD_MILLIS);
         PodSetController podSetController = new PodSetController(client, podSetClient, podSharedIndexInformer, podSetSharedIndexInformer, testNamespace);

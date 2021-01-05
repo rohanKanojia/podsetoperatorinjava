@@ -10,7 +10,6 @@ import io.fabric8.kubernetes.client.informers.ResourceEventHandler;
 import io.fabric8.kubernetes.client.informers.SharedIndexInformer;
 import io.fabric8.kubernetes.client.informers.cache.Cache;
 import io.fabric8.kubernetes.client.informers.cache.Lister;
-import io.fabric8.podset.operator.crd.DoneablePodSet;
 import io.fabric8.podset.operator.crd.PodSet;
 import io.fabric8.podset.operator.crd.PodSetList;
 
@@ -31,11 +30,11 @@ public class PodSetController {
     private final Lister<PodSet> podSetLister;
     private final Lister<Pod> podLister;
     private final KubernetesClient kubernetesClient;
-    private final MixedOperation<PodSet, PodSetList, DoneablePodSet, Resource<PodSet, DoneablePodSet>> podSetClient;
+    private final MixedOperation<PodSet, PodSetList, Resource<PodSet>> podSetClient;
     public static final Logger logger = Logger.getLogger(PodSetController.class.getName());
     public static final String APP_LABEL = "app";
 
-    public PodSetController(KubernetesClient kubernetesClient, MixedOperation<PodSet, PodSetList, DoneablePodSet, Resource<PodSet, DoneablePodSet>>  podSetClient, SharedIndexInformer<Pod> podInformer, SharedIndexInformer<PodSet> podSetInformer, String namespace) {
+    public PodSetController(KubernetesClient kubernetesClient, MixedOperation<PodSet, PodSetList, Resource<PodSet>> podSetClient, SharedIndexInformer<Pod> podInformer, SharedIndexInformer<PodSet> podSetInformer, String namespace) {
         this.kubernetesClient = kubernetesClient;
         this.podSetClient = podSetClient;
         this.podSetLister = new Lister<>(podSetInformer.getIndexer(), namespace);
