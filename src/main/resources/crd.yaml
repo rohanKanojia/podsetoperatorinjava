@@ -17,6 +17,13 @@ spec:
               properties:
                 replicas:
                   type: integer
+            status:
+              type: object
+              properties:
+                availableReplicas:
+                  type: integer
+      subresources:
+        status: {}
   names:
     kind: PodSet
     plural: podsets
