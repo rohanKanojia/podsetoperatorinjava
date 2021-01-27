@@ -12,6 +12,7 @@ import io.fabric8.kubernetes.client.informers.cache.Cache;
 import io.fabric8.kubernetes.client.informers.cache.Lister;
 import io.fabric8.podset.operator.crd.PodSet;
 import io.fabric8.podset.operator.crd.PodSetList;
+import io.fabric8.podset.operator.crd.PodSetStatus;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -143,6 +144,9 @@ public class PodSetController {
             String podName = pods.remove(0);
             kubernetesClient.pods().inNamespace(podSet.getMetadata().getNamespace()).withName(podName).delete();
         }
+
+        // Update PodSet status
+        updateAvailableReplicasInPodSetStatus(podSet, podSet.getSpec().getReplicas());
     }
 
     private void createPods(int numberOfPods, PodSet podSet) {
@@ -189,6 +193,13 @@ public class PodSetController {
         if (podSet != null) {
             enqueuePodSet(podSet);
         }
+    }
+
+    private void updateAvailableReplicasInPodSetStatus(PodSet podSet, int replicas) {
+        PodSetStatus podSetStatus = new PodSetStatus();
+        podSetStatus.setAvailableReplicas(replicas);
+        podSet.setStatus(podSetStatus);
+        podSetClient.inNamespace(podSet.getMetadata().getNamespace()).withName(podSet.getMetadata().getName()).updateStatus(podSet);
     }
 
     private Pod createNewPod(PodSet podSet) {

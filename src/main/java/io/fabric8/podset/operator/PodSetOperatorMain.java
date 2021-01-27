@@ -54,7 +54,7 @@ public class PodSetOperatorMain {
 
             podSetController.run();
         } catch (KubernetesClientException exception) {
-            logger.log(Level.SEVERE, "Kubernetes Client Exception : {}", exception.getMessage());
+            logger.log(Level.SEVERE, "Kubernetes Client Exception : " + exception.getMessage());
         }
     }
 }
