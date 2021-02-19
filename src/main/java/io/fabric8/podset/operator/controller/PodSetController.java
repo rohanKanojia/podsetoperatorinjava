@@ -10,9 +10,9 @@ import io.fabric8.kubernetes.client.informers.ResourceEventHandler;
 import io.fabric8.kubernetes.client.informers.SharedIndexInformer;
 import io.fabric8.kubernetes.client.informers.cache.Cache;
 import io.fabric8.kubernetes.client.informers.cache.Lister;
-import io.fabric8.podset.operator.crd.PodSet;
-import io.fabric8.podset.operator.crd.PodSetList;
-import io.fabric8.podset.operator.crd.PodSetStatus;
+import io.fabric8.podset.operator.model.v1alpha1.PodSet;
+import io.fabric8.podset.operator.model.v1alpha1.PodSetList;
+import io.fabric8.podset.operator.model.v1alpha1.PodSetStatus;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;

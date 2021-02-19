@@ -1,6 +1,4 @@
-package io.fabric8.podset.operator.crd;
-
-import io.fabric8.kubernetes.api.model.KubernetesResource;
+package io.fabric8.podset.operator.model.v1alpha1;
 
 public class PodSetStatus {
     public int getAvailableReplicas() {

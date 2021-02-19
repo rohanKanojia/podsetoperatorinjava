@@ -11,8 +11,8 @@ import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import io.fabric8.kubernetes.client.informers.SharedIndexInformer;
 import io.fabric8.kubernetes.client.informers.SharedInformerFactory;
 import io.fabric8.podset.operator.controller.PodSetController;
-import io.fabric8.podset.operator.crd.PodSet;
-import io.fabric8.podset.operator.crd.PodSetList;
+import io.fabric8.podset.operator.model.v1alpha1.PodSet;
+import io.fabric8.podset.operator.model.v1alpha1.PodSetList;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;

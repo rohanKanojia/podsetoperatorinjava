@@ -16,6 +16,8 @@
         <junit-jupiter-engine.version>5.6.2</junit-jupiter-engine.version>
         <maven-surefire-plugin.version>3.0.0-M4</maven-surefire-plugin.version>
         <exec-maven-plugin.version>3.0.0</exec-maven-plugin.version>
+        <image.user>rohankanojia</image.user>
+        <jkube.generator.name>quay.io/${image.user}/${project.artifactId}:${project.version}</jkube.generator.name>
         <jkube.version>1.1.0</jkube.version>
     </properties>
 

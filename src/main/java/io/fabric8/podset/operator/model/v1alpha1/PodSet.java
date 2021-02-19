@@ -1,4 +1,4 @@
-package io.fabric8.podset.operator.crd;
+package io.fabric8.podset.operator.model.v1alpha1;
 
 import io.fabric8.kubernetes.api.model.Namespaced;
 import io.fabric8.kubernetes.client.CustomResource;
