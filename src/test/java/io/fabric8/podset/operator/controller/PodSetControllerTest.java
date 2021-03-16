@@ -8,25 +8,24 @@ import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.informers.SharedIndexInformer;
 import io.fabric8.kubernetes.client.informers.SharedInformerFactory;
-import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
+import io.fabric8.kubernetes.client.server.mock.EnableKubernetesMockClient;
+import io.fabric8.kubernetes.client.server.mock.KubernetesMockServer;
 import io.fabric8.podset.operator.model.v1alpha1.PodSet;
 import io.fabric8.podset.operator.model.v1alpha1.PodSetList;
 import io.fabric8.podset.operator.model.v1alpha1.PodSetSpec;
 import okhttp3.mockwebserver.RecordedRequest;
-import org.junit.Rule;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.migrationsupport.rules.EnableRuleMigrationSupport;
 
 import java.net.HttpURLConnection;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@EnableRuleMigrationSupport
+@EnableKubernetesMockClient
 class PodSetControllerTest {
-    @Rule
-    public KubernetesServer server = new KubernetesServer();
+    private KubernetesMockServer server;
+    private KubernetesClient client;
 
     private static final long RESYNC_PERIOD_MILLIS = 10 * 60 * 1000L;
 
@@ -39,7 +38,6 @@ class PodSetControllerTest {
         server.expect().post().withPath("/api/v1/namespaces/" + testNamespace + "/pods")
                 .andReturn(HttpURLConnection.HTTP_CREATED, new PodBuilder().withNewMetadata().withName("pod1-clone").endMetadata().build())
                 .times(testPodSet.getSpec().getReplicas());
-        KubernetesClient client = server.getClient();
 
         SharedInformerFactory informerFactory = client.informers();
         MixedOperation<PodSet, PodSetList, Resource<PodSet>> podSetClient = client.customResources(PodSet.class, PodSetList.class);
@@ -51,7 +49,7 @@ class PodSetControllerTest {
         podSetController.reconcile(testPodSet);
 
         // Then
-        RecordedRequest recordedRequest = server.getLastRequest();
+        RecordedRequest recordedRequest = server.takeRequest();
         assertEquals("POST", recordedRequest.getMethod());
         assertTrue(recordedRequest.getBody().readUtf8().contains(testPodSet.getMetadata().getName()));
     }
