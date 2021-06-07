@@ -208,7 +208,7 @@ public class PodSetController {
                   .withGenerateName(podSet.getMetadata().getName() + "-pod")
                   .withNamespace(podSet.getMetadata().getNamespace())
                   .withLabels(Collections.singletonMap(APP_LABEL, podSet.getMetadata().getName()))
-                  .addNewOwnerReference().withController(true).withKind("PodSet").withApiVersion("demo.k8s.io/v1alpha1").withName(podSet.getMetadata().getName()).withNewUid(podSet.getMetadata().getUid()).endOwnerReference()
+                  .addNewOwnerReference().withController(true).withKind("PodSet").withApiVersion("demo.k8s.io/v1alpha1").withName(podSet.getMetadata().getName()).withUid(podSet.getMetadata().getUid()).endOwnerReference()
                 .endMetadata()
                 .withNewSpec()
                   .addNewContainer().withName("busybox").withImage("busybox").withCommand("sleep", "3600").endContainer()
