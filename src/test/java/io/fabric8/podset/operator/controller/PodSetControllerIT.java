@@ -51,6 +51,9 @@ class PodSetControllerIT {
 
         // Then
         assertEquals(2, getPodSetDependentPodsCount(podSet));
+        PodSet podSetFromServer = podSetClient.inNamespace(TEST_NAMESPACE).withName(podSet.getMetadata().getName()).get();
+        assertNotNull(podSetFromServer.getStatus());
+        assertEquals(2, podSetFromServer.getStatus().getAvailableReplicas());
     }
 
     @AfterEach

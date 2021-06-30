@@ -49,11 +49,13 @@ public class PodSetController {
         podSetInformer.addEventHandler(new ResourceEventHandler<PodSet>() {
             @Override
             public void onAdd(PodSet podSet) {
+                logger.info("PodSet " + podSet.getMetadata().getName() + " ADDED");
                 enqueuePodSet(podSet);
             }
 
             @Override
             public void onUpdate(PodSet podSet, PodSet newPodSet) {
+                logger.info("PodSet " + podSet.getMetadata().getName() + " MODIFIED");
                 enqueuePodSet(newPodSet);
             }
 
@@ -126,6 +128,7 @@ public class PodSetController {
      */
     protected void reconcile(PodSet podSet) {
         List<String> pods = podCountByLabel(APP_LABEL, podSet.getMetadata().getName());
+        logger.info("reconcile() : Found " + pods.size() + " number of Pods owned by PodSet " + podSet.getMetadata().getName());
         if (pods.isEmpty()) {
             createPods(podSet.getSpec().getReplicas(), podSet);
             return;
@@ -191,6 +194,7 @@ public class PodSetController {
             return;
         }
         PodSet podSet = podSetLister.get(ownerReference.getName());
+        logger.info("PodSetLister returned " + podSet + " for PodSet");
         if (podSet != null) {
             enqueuePodSet(podSet);
         }
@@ -200,7 +204,7 @@ public class PodSetController {
         PodSetStatus podSetStatus = new PodSetStatus();
         podSetStatus.setAvailableReplicas(replicas);
         podSet.setStatus(podSetStatus);
-        podSetClient.inNamespace(podSet.getMetadata().getNamespace()).withName(podSet.getMetadata().getName()).updateStatus(podSet);
+        podSetClient.inNamespace(podSet.getMetadata().getNamespace()).withName(podSet.getMetadata().getName()).patchStatus(podSet);
     }
 
     private Pod createNewPod(PodSet podSet) {
