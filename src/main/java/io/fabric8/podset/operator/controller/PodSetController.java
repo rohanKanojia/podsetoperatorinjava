@@ -150,6 +150,7 @@ public class PodSetController {
     }
 
     private void createPods(int numberOfPods, PodSet podSet) {
+        logger.info(String.format("Creating %d pods for %s PodSet", numberOfPods, podSet.getMetadata().getName()));
         for (int index = 0; index < numberOfPods; index++) {
             Pod pod = createNewPod(podSet);
             kubernetesClient.pods().inNamespace(podSet.getMetadata().getNamespace()).create(pod);

@@ -1,0 +1,43 @@
+name: E2E Tests
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+  schedule:
+    - cron: '0 1 * * *' # Everyday at 1
+
+env:
+  MAVEN_ARGS: -B -C -V -ntp -Dhttp.keepAlive=false -e
+
+jobs:
+
+  minikube:
+    name: K8S
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        kubernetes: [v1.20.1,v1.19.2]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.3.4
+      - name: Setup Minikube-Kubernetes
+        uses: manusa/actions-setup-minikube@v2.4.2
+        with:
+          minikube version: v1.16.0
+          kubernetes version: ${{ matrix.kubernetes }}
+          github token: ${{ secrets.GITHUB_TOKEN }}
+          start args: '--addons=metrics-server --force'
+      - name: Setup Java 11
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'
+          distribution: 'adopt'
+      - name: Install and Run Integration Tests
+        run: |
+          eval $(minikube -p minikube docker-env) 
+          kubectl create -f src/main/resources/crd.yaml
+          kubectl create clusterrolebinding default-pod --clusterrole cluster-admin --serviceaccount=default:default
+          mvn clean install -Pe2e-kubernetes
