@@ -35,8 +35,9 @@ class PodSetControllerTest {
         // Given
         String testNamespace = "ns1";
         PodSet testPodSet = getPodSet("example-podset", testNamespace, "0800cff3-9d80-11ea-8973-0e13a02d8ebd");
+        Pod clonePod = new PodBuilder().withNewMetadata().withName("pod1-clone").endMetadata().build();
         server.expect().post().withPath("/api/v1/namespaces/" + testNamespace + "/pods")
-                .andReturn(HttpURLConnection.HTTP_CREATED, new PodBuilder().withNewMetadata().withName("pod1-clone").endMetadata().build())
+                .andReturn(HttpURLConnection.HTTP_CREATED, clonePod)
                 .times(testPodSet.getSpec().getReplicas());
 
         SharedInformerFactory informerFactory = client.informers();
