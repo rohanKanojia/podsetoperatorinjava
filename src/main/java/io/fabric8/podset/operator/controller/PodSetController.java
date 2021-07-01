@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -156,7 +157,10 @@ public class PodSetController {
         logger.info(String.format("Creating %d pods for %s PodSet", numberOfPods, podSet.getMetadata().getName()));
         for (int index = 0; index < numberOfPods; index++) {
             Pod pod = createNewPod(podSet);
-            kubernetesClient.pods().inNamespace(podSet.getMetadata().getNamespace()).create(pod);
+            pod = kubernetesClient.pods().inNamespace(podSet.getMetadata().getNamespace()).create(pod);
+            kubernetesClient.pods().inNamespace(podSet.getMetadata().getNamespace())
+                    .withName(pod.getMetadata().getName())
+                    .waitUntilCondition(Objects::nonNull, 3, TimeUnit.SECONDS);
         }
     }
 
