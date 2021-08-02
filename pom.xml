@@ -106,12 +106,19 @@
                         <version>${jkube.version}</version>
                         <executions>
                             <execution>
-                                <id>jkube</id>
+                                <id>jkube-it-preparation</id>
                                 <phase>pre-integration-test</phase>
                                 <goals>
                                     <goal>resource</goal>
                                     <goal>build</goal>
                                     <goal>apply</goal>
+                                </goals>
+                            </execution>
+                            <execution>
+                                <id>jkube-it-cleanup</id>
+                                <phase>post-integration-test</phase>
+                                <goals>
+                                    <goal>undeploy</goal>
                                 </goals>
                             </execution>
                         </executions>
