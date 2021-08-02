@@ -15,6 +15,9 @@ import io.fabric8.podset.operator.model.v1alpha1.PodSetList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import java.util.concurrent.Future;
+import java.util.concurrent.ExecutionException;
+
 /**
  * Main Class for Operator, you can run this sample using this command:
  *
@@ -41,12 +44,16 @@ public class PodSetOperatorMain {
             PodSetController podSetController = new PodSetController(client, podSetClient, podSharedIndexInformer, podSetSharedIndexInformer, namespace);
 
             podSetController.create();
-            informerFactory.startAllRegisteredInformers();
+            Future<Void> startedInformersFuture = informerFactory.startAllRegisteredInformers();
+            startedInformersFuture.get();
             informerFactory.addSharedInformerEventListener(exception -> logger.log(Level.SEVERE, "Exception occurred, but caught", exception));
 
             podSetController.run();
-        } catch (KubernetesClientException exception) {
+        } catch (KubernetesClientException | ExecutionException exception) {
             logger.log(Level.SEVERE, "Kubernetes Client Exception : " + exception.getMessage());
+        } catch (InterruptedException interruptedException) {
+            logger.log(Level.INFO, "Interrupted: " + interruptedException.getMessage());
+            Thread.currentThread().interrupt();
         }
     }
 }
