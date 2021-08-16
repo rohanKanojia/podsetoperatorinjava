@@ -68,7 +68,7 @@ class PodSetControllerTest {
         server.expect().post().withPath("/api/v1/namespaces/" + testNamespace + "/pods")
                 .andReturn(HttpURLConnection.HTTP_CREATED, clonePod)
                 .once();
-        server.expect().get().withPath("/api/v1/namespaces/" + testNamespace + "/pods?fieldSelector=" + Utils.toUrlEncoded("metadata.name=" + clonePod.getMetadata().getName()) + "&watch=false")
+        server.expect().get().withPath("/api/v1/namespaces/" + testNamespace + "/pods?fieldSelector=" + Utils.toUrlEncoded("metadata.name=" + clonePod.getMetadata().getName()))
                 .andReturn(HttpURLConnection.HTTP_OK, clonePod)
                 .once();
         server.expect().get().withPath("/api/v1/namespaces/" + testNamespace + "/pods?fieldSelector=" + Utils.toUrlEncoded("metadata.name=" + clonePod.getMetadata().getName()) + "&watch=true")

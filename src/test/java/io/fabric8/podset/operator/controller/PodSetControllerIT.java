@@ -9,7 +9,6 @@ import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
-import io.fabric8.kubernetes.client.utils.KubernetesResourceUtil;
 import io.fabric8.podset.operator.model.v1alpha1.PodSet;
 import io.fabric8.podset.operator.model.v1alpha1.PodSetList;
 import io.fabric8.podset.operator.model.v1alpha1.PodSetSpec;
