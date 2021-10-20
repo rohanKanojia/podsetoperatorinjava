@@ -33,7 +33,7 @@ class PodSetControllerIT {
     @BeforeEach
     void initPodSetClient() {
         kubernetesClient = new DefaultKubernetesClient();
-        podSetClient = kubernetesClient.customResources(PodSet.class, PodSetList.class);
+        podSetClient = kubernetesClient.resources(PodSet.class, PodSetList.class);
     }
 
     @Test
@@ -89,7 +89,7 @@ class PodSetControllerIT {
         return operatorPodList.getItems().get(0);
     }
 
-    private void waitUntilOperatorIsRunning(Pod operatorPod) throws InterruptedException {
+    private void waitUntilOperatorIsRunning(Pod operatorPod) {
         kubernetesClient.pods()
                 .inNamespace(TEST_NAMESPACE)
                 .withName(operatorPod.getMetadata().getName())
