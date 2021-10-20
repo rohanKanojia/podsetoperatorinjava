@@ -40,9 +40,9 @@ class PodSetControllerTest {
         setupMockExpectations(testNamespace);
 
         SharedInformerFactory informerFactory = client.informers();
-        MixedOperation<PodSet, PodSetList, Resource<PodSet>> podSetClient = client.customResources(PodSet.class, PodSetList.class);
+        MixedOperation<PodSet, PodSetList, Resource<PodSet>> podSetClient = client.resources(PodSet.class, PodSetList.class);
         SharedIndexInformer<Pod> podSharedIndexInformer = informerFactory.sharedIndexInformerFor(Pod.class, RESYNC_PERIOD_MILLIS);
-        SharedIndexInformer<PodSet> podSetSharedIndexInformer = informerFactory.sharedIndexInformerForCustomResource(PodSet.class, RESYNC_PERIOD_MILLIS);
+        SharedIndexInformer<PodSet> podSetSharedIndexInformer = informerFactory.sharedIndexInformerFor(PodSet.class, RESYNC_PERIOD_MILLIS);
         PodSetController podSetController = new PodSetController(client, podSetClient, podSharedIndexInformer, podSetSharedIndexInformer, testNamespace);
 
         // When
