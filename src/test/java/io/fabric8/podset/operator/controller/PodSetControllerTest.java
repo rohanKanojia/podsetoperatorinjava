@@ -71,7 +71,7 @@ class PodSetControllerTest {
         server.expect().get().withPath("/api/v1/namespaces/" + testNamespace + "/pods?fieldSelector=" + Utils.toUrlEncoded("metadata.name=" + clonePod.getMetadata().getName()))
                 .andReturn(HttpURLConnection.HTTP_OK, clonePod)
                 .once();
-        server.expect().get().withPath("/api/v1/namespaces/" + testNamespace + "/pods?fieldSelector=" + Utils.toUrlEncoded("metadata.name=" + clonePod.getMetadata().getName()) + "&watch=true")
+        server.expect().get().withPath("/api/v1/namespaces/" + testNamespace + "/pods?fieldSelector=" + Utils.toUrlEncoded("metadata.name=" + clonePod.getMetadata().getName()) + "&allowWatchBookmarks=true&watch=true")
                 .andUpgradeToWebSocket().open()
                 .waitFor(100).andEmit(new WatchEvent(clonePod, "ADDED"))
                 .done()
