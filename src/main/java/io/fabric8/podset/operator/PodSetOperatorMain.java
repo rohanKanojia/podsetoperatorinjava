@@ -1,8 +1,8 @@
 package io.fabric8.podset.operator;
 
 import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClientBuilder;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
@@ -27,7 +27,7 @@ public class PodSetOperatorMain {
     public static final Logger logger = Logger.getLogger(PodSetOperatorMain.class.getName());
 
     public static void main(String[] args) {
-        try (KubernetesClient client = new DefaultKubernetesClient()) {
+        try (KubernetesClient client = new KubernetesClientBuilder().build()) {
             String namespace = client.getNamespace();
             if (namespace == null) {
                 logger.log(Level.INFO, "No namespace found via config, assuming default.");

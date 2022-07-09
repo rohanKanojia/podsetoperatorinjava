@@ -5,8 +5,8 @@ import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodList;
-import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClientBuilder;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.podset.operator.model.v1alpha1.PodSet;
@@ -32,7 +32,7 @@ class PodSetControllerIT {
 
     @BeforeEach
     void initPodSetClient() {
-        kubernetesClient = new DefaultKubernetesClient();
+        kubernetesClient = new KubernetesClientBuilder().build();
         podSetClient = kubernetesClient.resources(PodSet.class, PodSetList.class);
     }
 
@@ -44,7 +44,7 @@ class PodSetControllerIT {
         PodSet podSet = createNewPodSet("test-podset1", 2);
 
         // When
-        podSet = podSetClient.inNamespace(TEST_NAMESPACE).create(podSet);
+        podSet = podSetClient.inNamespace(TEST_NAMESPACE).resource(podSet).create();
         TimeUnit.SECONDS.sleep(30);
         printOperatorLogs(operatorPod);
 

@@ -157,7 +157,7 @@ public class PodSetController {
         logger.info(String.format("Creating %d pods for %s PodSet", numberOfPods, podSet.getMetadata().getName()));
         for (int index = 0; index < numberOfPods; index++) {
             Pod pod = createNewPod(podSet);
-            pod = kubernetesClient.pods().inNamespace(podSet.getMetadata().getNamespace()).create(pod);
+            pod = kubernetesClient.pods().inNamespace(podSet.getMetadata().getNamespace()).resource(pod).create();
             kubernetesClient.pods().inNamespace(podSet.getMetadata().getNamespace())
                     .withName(pod.getMetadata().getName())
                     .waitUntilCondition(Objects::nonNull, 3, TimeUnit.SECONDS);
@@ -208,7 +208,7 @@ public class PodSetController {
         PodSetStatus podSetStatus = new PodSetStatus();
         podSetStatus.setAvailableReplicas(replicas);
         podSet.setStatus(podSetStatus);
-        podSetClient.inNamespace(podSet.getMetadata().getNamespace()).withName(podSet.getMetadata().getName()).patchStatus(podSet);
+        podSetClient.inNamespace(podSet.getMetadata().getNamespace()).resource(podSet).patchStatus();
     }
 
     private Pod createNewPod(PodSet podSet) {
