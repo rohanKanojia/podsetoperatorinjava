@@ -1,5 +1,6 @@
 package io.fabric8.podset.operator.controller;
 
+import io.fabric8.kubernetes.api.model.KubernetesResourceList;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodBuilder;
@@ -13,7 +14,6 @@ import io.fabric8.kubernetes.client.server.mock.EnableKubernetesMockClient;
 import io.fabric8.kubernetes.client.server.mock.KubernetesMockServer;
 import io.fabric8.kubernetes.client.utils.Utils;
 import io.fabric8.podset.operator.model.v1alpha1.PodSet;
-import io.fabric8.podset.operator.model.v1alpha1.PodSetList;
 import io.fabric8.podset.operator.model.v1alpha1.PodSetSpec;
 import okhttp3.mockwebserver.RecordedRequest;
 import org.junit.jupiter.api.DisplayName;
@@ -40,7 +40,7 @@ class PodSetControllerTest {
         setupMockExpectations(testNamespace);
 
         SharedInformerFactory informerFactory = client.informers();
-        MixedOperation<PodSet, PodSetList, Resource<PodSet>> podSetClient = client.resources(PodSet.class, PodSetList.class);
+        MixedOperation<PodSet, KubernetesResourceList<PodSet>, Resource<PodSet>> podSetClient = client.resources(PodSet.class);
         SharedIndexInformer<Pod> podSharedIndexInformer = informerFactory.sharedIndexInformerFor(Pod.class, RESYNC_PERIOD_MILLIS);
         SharedIndexInformer<PodSet> podSetSharedIndexInformer = informerFactory.sharedIndexInformerFor(PodSet.class, RESYNC_PERIOD_MILLIS);
         PodSetController podSetController = new PodSetController(client, podSetClient, podSharedIndexInformer, podSetSharedIndexInformer, testNamespace);

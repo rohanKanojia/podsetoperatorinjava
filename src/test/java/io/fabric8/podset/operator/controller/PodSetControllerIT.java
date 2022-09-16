@@ -1,6 +1,7 @@
 package io.fabric8.podset.operator.controller;
 
 import io.fabric8.kubernetes.api.model.DeletionPropagation;
+import io.fabric8.kubernetes.api.model.KubernetesResourceList;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Pod;
@@ -10,7 +11,6 @@ import io.fabric8.kubernetes.client.KubernetesClientBuilder;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.podset.operator.model.v1alpha1.PodSet;
-import io.fabric8.podset.operator.model.v1alpha1.PodSetList;
 import io.fabric8.podset.operator.model.v1alpha1.PodSetSpec;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,13 +27,13 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  */
 class PodSetControllerIT {
     private KubernetesClient kubernetesClient;
-    private MixedOperation<PodSet, PodSetList, Resource<PodSet>> podSetClient;
+    private MixedOperation<PodSet, KubernetesResourceList<PodSet>, Resource<PodSet>> podSetClient;
     private static final String TEST_NAMESPACE = "default";
 
     @BeforeEach
     void initPodSetClient() {
         kubernetesClient = new KubernetesClientBuilder().build();
-        podSetClient = kubernetesClient.resources(PodSet.class, PodSetList.class);
+        podSetClient = kubernetesClient.resources(PodSet.class);
     }
 
     @Test
