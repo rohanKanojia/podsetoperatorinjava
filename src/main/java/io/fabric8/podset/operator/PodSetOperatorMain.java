@@ -26,7 +26,6 @@ public class PodSetOperatorMain {
     public static final Logger logger = LoggerFactory.getLogger(PodSetOperatorMain.class.getSimpleName());
 
     public static void main(String[] args) {
-        SharedInformerFactory informerFactory = null;
         try (KubernetesClient client = new KubernetesClientBuilder().build()) {
             String namespace = client.getNamespace();
             if (namespace == null) {
@@ -36,16 +35,16 @@ public class PodSetOperatorMain {
 
             logger.info("Using namespace : {}", namespace);
 
-            informerFactory = client.informers();
+            SharedInformerFactory informerFactory = client.informers();
 
             MixedOperation<PodSet, KubernetesResourceList<PodSet>, Resource<PodSet>> podSetClient = client.resources(PodSet.class);
             SharedIndexInformer<Pod> podSharedIndexInformer = informerFactory.sharedIndexInformerFor(Pod.class, 10 * 60 * 1000L);
             SharedIndexInformer<PodSet> podSetSharedIndexInformer = informerFactory.sharedIndexInformerFor(PodSet.class, 10 * 60 * 1000L);
             PodSetController podSetController = new PodSetController(client, podSetClient, podSharedIndexInformer, podSetSharedIndexInformer, namespace);
+            informerFactory.addSharedInformerEventListener(exception -> logger.error("Exception occurred, but caught", exception));
 
             Future<Void> startedInformersFuture = informerFactory.startAllRegisteredInformers();
             startedInformersFuture.get();
-            informerFactory.addSharedInformerEventListener(exception -> logger.error("Exception occurred, but caught", exception));
 
             podSetController.run();
         } catch (KubernetesClientException | ExecutionException exception) {
@@ -53,10 +52,6 @@ public class PodSetOperatorMain {
         } catch (InterruptedException interruptedException) {
             logger.error("Interrupted: ", interruptedException);
             Thread.currentThread().interrupt();
-        } finally {
-            if (informerFactory != null) {
-                informerFactory.stopAllRegisteredInformers();
-            }
         }
     }
 }
