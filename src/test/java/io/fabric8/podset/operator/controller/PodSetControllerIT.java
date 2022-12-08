@@ -9,6 +9,7 @@ import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientBuilder;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
+import io.fabric8.kubernetes.client.dsl.PodResource;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.podset.operator.model.v1alpha1.PodSet;
 import io.fabric8.podset.operator.model.v1alpha1.PodSetSpec;
@@ -17,7 +18,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -37,7 +44,7 @@ class PodSetControllerIT {
     }
 
     @Test
-    void testPodsWithDesiredReplicasCreatedOnPodSetCreate() throws InterruptedException {
+    void testPodsWithDesiredReplicasCreatedOnPodSetCreate() throws InterruptedException, ExecutionException, TimeoutException {
         // Given
         Pod operatorPod = getOperatorPod();
         waitUntilOperatorIsRunning(operatorPod);
@@ -45,14 +52,14 @@ class PodSetControllerIT {
 
         // When
         podSet = podSetClient.inNamespace(TEST_NAMESPACE).resource(podSet).create();
-        TimeUnit.SECONDS.sleep(30);
-        printOperatorLogs(operatorPod);
+        waitUntilOperatorLogsPodCreation(operatorPod);
 
         // Then
         assertEquals(2, getPodSetDependentPodsCount(podSet));
         PodSet podSetFromServer = podSetClient.inNamespace(TEST_NAMESPACE).withName(podSet.getMetadata().getName()).get();
         assertNotNull(podSetFromServer.getStatus());
         assertEquals(2, podSetFromServer.getStatus().getAvailableReplicas());
+        kubernetesClient.pods().inNamespace(TEST_NAMESPACE).withLabel("app", "test-podset1").delete();
     }
 
     @AfterEach
@@ -67,7 +74,6 @@ class PodSetControllerIT {
         PodList podList = kubernetesClient.pods().inNamespace(TEST_NAMESPACE)
                 .withLabel("app", podSet.getMetadata().getName())
                 .list();
-        podList.getItems().stream().map(Pod::getMetadata).map(ObjectMeta::getName).forEach(System.out::println);
 
         int nDependents = 0;
         for (Pod pod : podList.getItems()) {
@@ -96,8 +102,12 @@ class PodSetControllerIT {
                 .waitUntilReady(2, TimeUnit.MINUTES);
     }
 
-    private void printOperatorLogs(Pod operatorPod) {
-        System.out.println(kubernetesClient.pods().inNamespace(TEST_NAMESPACE).withName(operatorPod.getMetadata().getName()).getLog());
+    private void waitUntilOperatorLogsPodCreation(Pod operatorPod) throws ExecutionException, InterruptedException, TimeoutException {
+        PodResource podResource = kubernetesClient.pods().inNamespace(TEST_NAMESPACE)
+                .resource(operatorPod);
+        await(podResource::getLog)
+            .apply(l -> l.contains("Created 2 pods for test-podset1 PodSet"))
+            .get(30, TimeUnit.SECONDS);
     }
 
     private PodSet createNewPodSet(String name, int replicas) {
@@ -110,5 +120,20 @@ class PodSetControllerIT {
                 .build());
         podSet.setSpec(podSetSpec);
         return podSet;
+    }
+
+    private Function<Predicate<String>, CompletableFuture<String>> await(Supplier<String> supplier) {
+        return condition -> CompletableFuture.supplyAsync(() -> {
+            String result = null;
+            while (!Thread.currentThread().isInterrupted() &&
+                   !condition.test(result = supplier.get())) {
+                try {
+                    Thread.sleep(100L);
+                } catch (InterruptedException interruptedException) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+            return result;
+        });
     }
 }
