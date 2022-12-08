@@ -41,8 +41,6 @@ public class PodSetOperatorMain {
             SharedIndexInformer<Pod> podSharedIndexInformer = informerFactory.sharedIndexInformerFor(Pod.class, 10 * 60 * 1000L);
             SharedIndexInformer<PodSet> podSetSharedIndexInformer = informerFactory.sharedIndexInformerFor(PodSet.class, 10 * 60 * 1000L);
             PodSetController podSetController = new PodSetController(client, podSetClient, podSharedIndexInformer, podSetSharedIndexInformer, namespace);
-            informerFactory.addSharedInformerEventListener(exception -> logger.error("Exception occurred, but caught", exception));
-
             Future<Void> startedInformersFuture = informerFactory.startAllRegisteredInformers();
             startedInformersFuture.get();
 
