@@ -2,7 +2,6 @@ package io.fabric8.podset.operator.controller;
 
 import io.fabric8.kubernetes.api.model.DeletionPropagation;
 import io.fabric8.kubernetes.api.model.KubernetesResourceList;
-import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodList;
@@ -13,6 +12,8 @@ import io.fabric8.kubernetes.client.dsl.PodResource;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.podset.operator.model.v1alpha1.PodSet;
 import io.fabric8.podset.operator.model.v1alpha1.PodSetSpec;
+import io.fabric8.junit.jupiter.api.RequireK8sVersionAtLeast;
+import io.fabric8.junit.jupiter.api.RequireK8sSupport;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,6 +33,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 /*
  * This Test requires Operator to be already running in the cluster.
  */
+@RequireK8sSupport(PodSet.class)
+@RequireK8sVersionAtLeast(majorVersion = 1, minorVersion = 16)
 class PodSetControllerIT {
     private KubernetesClient kubernetesClient;
     private MixedOperation<PodSet, KubernetesResourceList<PodSet>, Resource<PodSet>> podSetClient;
