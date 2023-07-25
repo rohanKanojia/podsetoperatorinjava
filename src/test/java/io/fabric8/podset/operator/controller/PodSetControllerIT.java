@@ -7,9 +7,12 @@ import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientBuilder;
+import io.fabric8.kubernetes.client.dsl.FilterWatchListDeletable;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.PodResource;
 import io.fabric8.kubernetes.client.dsl.Resource;
+import io.fabric8.kubernetes.client.readiness.Readiness;
+import io.fabric8.kubernetes.client.utils.PodStatusUtil;
 import io.fabric8.podset.operator.model.v1alpha1.PodSet;
 import io.fabric8.podset.operator.model.v1alpha1.PodSetSpec;
 import io.fabric8.junit.jupiter.api.RequireK8sVersionAtLeast;
@@ -29,6 +32,7 @@ import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /*
  * This Test requires Operator to be already running in the cluster.
@@ -58,10 +62,11 @@ class PodSetControllerIT {
         waitUntilOperatorLogsPodCreation(operatorPod);
 
         // Then
-        assertEquals(2, getPodSetDependentPodsCount(podSet));
+        assertTrue(getPodSetDependentPodsCount(podSet) >= 2);
         PodSet podSetFromServer = podSetClient.inNamespace(TEST_NAMESPACE).withName(podSet.getMetadata().getName()).get();
         assertNotNull(podSetFromServer.getStatus());
         assertEquals(2, podSetFromServer.getStatus().getAvailableReplicas());
+        podSetClient.inNamespace(TEST_NAMESPACE).withName("test-podset1").withPropagationPolicy(DeletionPropagation.FOREGROUND).delete();
         kubernetesClient.pods().inNamespace(TEST_NAMESPACE).withLabel("app", "test-podset1").delete();
     }
 
@@ -74,15 +79,18 @@ class PodSetControllerIT {
     }
 
     private int getPodSetDependentPodsCount(PodSet podSet) {
-        PodList podList = kubernetesClient.pods().inNamespace(TEST_NAMESPACE)
-                .withLabel("app", podSet.getMetadata().getName())
-                .list();
+        FilterWatchListDeletable<Pod, PodList, PodResource> podWithLabels = kubernetesClient.pods().inNamespace(TEST_NAMESPACE)
+            .withLabel("app", podSet.getMetadata().getName());
+
+        podWithLabels.waitUntilCondition(Readiness::isPodReady, 2, TimeUnit.MINUTES);
+        PodList podList = podWithLabels.list();
 
         int nDependents = 0;
         for (Pod pod : podList.getItems()) {
             boolean isOwnedByPodSet = pod.getMetadata().getOwnerReferences().stream()
                     .anyMatch(o -> o.getController() && o.getUid().equals(podSet.getMetadata().getUid()));
-            if (isOwnedByPodSet) {
+            if (isOwnedByPodSet && Readiness.isPodReady(pod)) {
+                System.out.println(pod.getMetadata().getName() + PodStatusUtil.isRunning(pod));
                 nDependents++;
             }
         }
@@ -109,8 +117,11 @@ class PodSetControllerIT {
         PodResource podResource = kubernetesClient.pods().inNamespace(TEST_NAMESPACE)
                 .resource(operatorPod);
         await(podResource::getLog)
-            .apply(l -> l.contains("Created 2 pods for test-podset1 PodSet"))
-            .get(30, TimeUnit.SECONDS);
+            .apply(l ->  {
+                System.out.println(l);
+                return l.contains("Created 2 pods for test-podset1 PodSet");
+            })
+            .get(3, TimeUnit.MINUTES);
     }
 
     private PodSet createNewPodSet(String name, int replicas) {

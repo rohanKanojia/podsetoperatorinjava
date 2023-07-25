@@ -126,6 +126,9 @@
     <profiles>
         <profile>
             <id>e2e-kubernetes</id>
+            <properties>
+              <jkube.generator.name>ttl.sh/%a-%t:5m</jkube.generator.name>
+            </properties>
             <build>
                 <plugins>
                     <plugin>
@@ -139,6 +142,7 @@
                                 <goals>
                                     <goal>resource</goal>
                                     <goal>build</goal>
+                                    <goal>push</goal>
                                     <goal>apply</goal>
                                 </goals>
                             </execution>
