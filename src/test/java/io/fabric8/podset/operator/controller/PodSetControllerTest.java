@@ -55,7 +55,13 @@ class PodSetControllerTest {
     }
 
     private Pod createPodWithName(String name) {
-        return new PodBuilder().withNewMetadata().withName(name).endMetadata().build();
+        return new PodBuilder().withNewMetadata().withName(name).endMetadata()
+            .withNewStatus()
+            .addNewCondition()
+            .withType("Ready")
+            .endCondition()
+            .endStatus()
+            .build();
     }
 
     void setupMockExpectations(String testNamespace) {
@@ -66,16 +72,16 @@ class PodSetControllerTest {
 
     void setupMockExpectationsForPod(Pod clonePod, String testNamespace) {
         server.expect().post().withPath("/api/v1/namespaces/" + testNamespace + "/pods")
-                .andReturn(HttpURLConnection.HTTP_CREATED, clonePod)
-                .once();
+            .andReturn(HttpURLConnection.HTTP_CREATED, clonePod)
+            .always();
         server.expect().get().withPath("/api/v1/namespaces/" + testNamespace + "/pods?fieldSelector=" + Utils.toUrlEncoded("metadata.name=" + clonePod.getMetadata().getName()))
                 .andReturn(HttpURLConnection.HTTP_OK, clonePod)
-                .once();
+                .always();
         server.expect().get().withPath("/api/v1/namespaces/" + testNamespace + "/pods?fieldSelector=" + Utils.toUrlEncoded("metadata.name=" + clonePod.getMetadata().getName()) + "&timeoutSeconds=600&allowWatchBookmarks=true&watch=true")
                 .andUpgradeToWebSocket().open()
                 .waitFor(100).andEmit(new WatchEvent(clonePod, "ADDED"))
                 .done()
-                .once();
+                .always();
     }
 
     private PodSet getPodSet(String name, String testNamespace, String uid) {
